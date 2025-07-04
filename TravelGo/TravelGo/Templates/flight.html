@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Search Flights - TravelGo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: url('https://st4.depositphotos.com/4601361/31423/i/450/depositphotos_314238830-stock-photo-air-ticket-and-passport-for.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+    }
+
+    header {
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 20px;
+      color: white;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    select, input, button {
+      padding: 10px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .flight-card {
+      background: #f0f4f8;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    #loader {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .spinner {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #007bff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>✈ TravelGo - Flight Booking</h1>
+</header>
+
+<main class="container">
+  <h2>Search & Book Flights</h2>
+
+  <form id="searchForm">
+    <select id="source" required>
+      <option value="">From</option>
+      <option>Hyderabad</option>
+      <option>Delhi</option>
+      <option>Chennai</option>
+      <option>Mumbai</option>
+      <option>Bengaluru</option>
+    </select>
+
+    <select id="destination" required>
+      <option value="">To</option>
+      <option>Hyderabad</option>
+      <option>Delhi</option>
+      <option>Chennai</option>
+      <option>Mumbai</option>
+      <option>Bengaluru</option>
+    </select>
+
+    <input type="date" id="date" required />
+    <input type="number" id="numPersons" min="1" value="1" required placeholder="Passengers" />
+    <button type="button" id="search-btn">Search</button>
+  </form>
+
+  <div id="loader"><div class="spinner"></div><p>Searching flights...</p></div>
+
+  <div id="flight-list"></div>
+</main>
+
+<script>
+const airlines = ['IndiGo', 'Vistara', 'Air India', 'SpiceJet', 'Akasa Air'];
+const numbers = ['6E-234', 'UK-876', 'AI-543', 'SG-123', 'QP-909'];
+const times = [
+  { depart: '06:00', arrive: '07:30' },
+  { depart: '08:30', arrive: '10:15' },
+  { depart: '12:00', arrive: '14:00' },
+  { depart: '15:45', arrive: '17:15' },
+  { depart: '19:00', arrive: '21:00' }
+];
+
+function generateFlights(src, dst) {
+  const results = [];
+  for (let i = 0; i < 3; i++) {
+    const airline = airlines[i % airlines.length];
+    const number = numbers[i % numbers.length];
+    const time = times[i % times.length];
+    const price = 3000 + Math.floor(Math.random() * 2000);
+    results.push({
+      id: `FLT${100 + i}`,
+      airline,
+      number,
+      source: src,
+      dest: dst,
+      depart: time.depart,
+      arrive: time.arrive,
+      price
+    });
+  }
+  return results;
+}
+
+function filterFlights() {
+  const src = document.getElementById('source').value;
+  const dst = document.getElementById('destination').value;
+  const date = document.getElementById('date').value;
+  const pax = parseInt(document.getElementById('numPersons').value);
+  const list = document.getElementById('flight-list');
+  const loader = document.getElementById('loader');
+  list.innerHTML = "";
+
+  if (!src || !dst || !date || pax < 1) {
+    alert("Please fill all fields.");
+    return;
+  }
+  if (src === dst) {
+    alert("Source and destination cannot be the same.");
+    return;
+  }
+
+  loader.style.display = 'block';
+
+  setTimeout(() => {
+    loader.style.display = 'none';
+
+    const flights = generateFlights(src, dst);
+    flights.forEach(f => {
+      const card = document.createElement('div');
+      card.className = 'flight-card';
+      card.innerHTML = `
+        <strong>${f.airline} ${f.number}</strong><br>
+        ${f.source} → ${f.dest}<br>
+        ${date} | ${f.depart} - ${f.arrive}<br>
+        ₹${f.price} x ${pax} = ₹${f.price * pax}<br><br>
+        <button onclick="confirmFlight('${f.id}','${f.airline}','${f.number}','${f.source}','${f.dest}','${f.depart}','${f.arrive}','${date}',${pax},${f.price})">Book</button>
+      `;
+      list.appendChild(card);
+    });
+  }, 1500);
+}
+
+function confirmFlight(id, airline, number, src, dst, depart, arrive, date, pax, price) {
+  const url = `/select_flight_seats?flight_id=${id}&airline=${airline}&flight_number=${number}&source=${src}&destination=${dst}&departure=${depart}&arrival=${arrive}&date=${date}&passengers=${pax}&price=${price}`;
+  window.location.href = url;
+}
+
+document.getElementById('search-btn').addEventListener('click', filterFlights);
+</script>
+
+</body>
+</html>

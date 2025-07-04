@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select Train Seats</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('https://images.unsplash.com/photo-1607619056574-bda4f98d9f82?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+    }
+
+    .overlay {
+      background-color: rgba(0, 0, 0, 0.65);
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .booking-card {
+      background-color: white;
+      max-width: 800px;
+      width: 100%;
+      padding: 30px 25px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    h2 {
+      color: #222;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .coach-type {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #555;
+      font-size: 16px;
+    }
+
+    .seat-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 30px;
+    }
+
+    .seat {
+      width: 50px;
+      height: 50px;
+      background-color: #e0e0e0;
+      text-align: center;
+      line-height: 45px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.3s ease;
+      border: 2px solid transparent;
+      position: relative;
+    }
+
+    .seat:hover {
+      transform: scale(1.05);
+      border-color: #2196f3;
+    }
+
+    .seat.selected {
+      background-color: #4caf50;
+      color: white;
+      border-color: #388e3c;
+    }
+
+    .seat.booked {
+      background-color: #d32f2f;
+      color: white;
+      cursor: not-allowed;
+      border-color: #b71c1c;
+    }
+
+    .berth-label {
+      display: block;
+      font-size: 10px;
+      color: #444;
+      margin-top: -4px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .actions {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 12px 30px;
+      font-size: 16px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 5px 10px rgba(25, 118, 210, 0.3);
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0d47a1;
+    }
+
+    @media (max-width: 600px) {
+      .seat {
+        width: 40px;
+        height: 40px;
+        line-height: 38px;
+        font-size: 12px;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="booking-card">
+      <h2>Select Seats - {{ booking.name }} ({{ booking.train_number }})</h2>
+      <div class="coach-type">
+        Coach Type: <strong>{{ booking.coach }}</strong> | Persons: {{ booking.persons }} | Date: {{ booking.travel_date }}
+      </div>
+      <div class="seat-container" id="seatContainer"></div>
+      <div class="actions">
+        <button onclick="confirmSeats()">Confirm Selection</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const maxSeats = parseInt("{{ booking.persons }}");
+    const coach = "{{ booking.coach }}";
+    const booked = JSON.parse('{{ booked_seats|tojson|safe }}');
+    let selected = [];
+
+    const seatLayout = {
+      "Sleeper": generateSleeperLayout(),
+      "AC 3-Tier": generate3TierLayout(),
+      "AC 2-Tier": generate2TierLayout(),
+      "AC First Class": generateFirstClassLayout()
+    };
+
+    const seatContainer = document.getElementById("seatContainer");
+    seatLayout[coach].forEach(seat => {
+      const div = document.createElement("div");
+      div.className = "seat";
+      div.innerHTML = seat.label + `<span class='berth-label'>${seat.berth}</span>`;
+
+      if (booked.includes(seat.label)) {
+        div.classList.add("booked");
+      }
+
+      div.addEventListener("click", () => {
+        if (div.classList.contains("booked")) return;
+        if (div.classList.contains("selected")) {
+          div.classList.remove("selected");
+          selected = selected.filter(s => s !== seat.label);
+        } else if (selected.length < maxSeats) {
+          div.classList.add("selected");
+          selected.push(seat.label);
+        }
+      });
+
+      seatContainer.appendChild(div);
+    });
+
+    function confirmSeats() {
+      if (selected.length !== maxSeats) {
+        alert(`Please select exactly ${maxSeats} seat(s).`);
+        return;
+      }
+      const params = new URLSearchParams({
+        name: "{{ booking.name }}",
+        trainNumber: "{{ booking.train_number }}",
+        source: "{{ booking.source }}",
+        destination: "{{ booking.destination }}",
+        departureTime: "{{ booking.departure }}",
+        arrivalTime: "{{ booking.arrival }}",
+        coach: "{{ booking.coach }}",
+        date: "{{ booking.travel_date }}",
+        price: "{{ booking.price }}",
+        persons: "{{ booking.persons }}",
+        seats: selected.join(',')
+      });
+      window.location.href = "/confirm_train_details?" + params.toString();
+    }
+
+    function generateSleeperLayout() {
+      const layout = [];
+      let count = 1;
+      for (let i = 0; i < 10; i++) {
+        layout.push(
+          { label: `S${count++}`, berth: 'LB' },
+          { label: `S${count++}`, berth: 'MB' },
+          { label: `S${count++}`, berth: 'UB' },
+          { label: `S${count++}`, berth: 'LB' },
+          { label: `S${count++}`, berth: 'MB' },
+          { label: `S${count++}`, berth: 'UB' },
+          { label: `S${count++}`, berth: 'SL' },
+          { label: `S${count++}`, berth: 'SU' }
+        );
+      }
+      return layout;
+    }
+
+    function generate3TierLayout() {
+      const layout = [];
+      let count = 1;
+      for (let i = 0; i < 8; i++) {
+        layout.push(
+          { label: `B${count++}`, berth: 'LB' },
+          { label: `B${count++}`, berth: 'MB' },
+          { label: `B${count++}`, berth: 'UB' },
+          { label: `B${count++}`, berth: 'LB' },
+          { label: `B${count++}`, berth: 'MB' },
+          { label: `B${count++}`, berth: 'UB' },
+          { label: `B${count++}`, berth: 'SL' },
+          { label: `B${count++}`, berth: 'SU' }
+        );
+      }
+      return layout;
+    }
+
+    function generate2TierLayout() {
+      const layout = [];
+      let count = 1;
+      for (let i = 0; i < 9; i++) {
+        layout.push(
+          { label: `T${count++}`, berth: 'LB' },
+          { label: `T${count++}`, berth: 'UB' },
+          { label: `T${count++}`, berth: 'LB' },
+          { label: `T${count++}`, berth: 'UB' },
+          { label: `T${count++}`, berth: 'SL' },
+          { label: `T${count++}`, berth: 'SU' }
+        );
+      }
+      return layout;
+    }
+
+    function generateFirstClassLayout() {
+      const layout = [];
+      let count = 1;
+      for (let i = 0; i < 6; i++) {
+        layout.push(
+          { label: `F${count++}`, berth: 'Cabin-LB' },
+          { label: `F${count++}`, berth: 'Cabin-UB' },
+          { label: `F${count++}`, berth: 'Cabin-LB' },
+          { label: `F${count++}`, berth: 'Cabin-UB' }
+        );
+      }
+      return layout;
+    }
+  </script>
+</body>
+</html>

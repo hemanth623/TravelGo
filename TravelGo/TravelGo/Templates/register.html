@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TravelGo - Registration</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1650&q=80') no-repeat center center fixed;
+      background-size: cover;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .form-container {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 40px 30px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-container h2 {
+      margin-bottom: 24px;
+      color: #004aad;
+      font-weight: bold;
+    }
+
+    input {
+      width: 90%;
+      padding: 14px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #004aad;
+      outline: none;
+      box-shadow: 0 0 8px rgba(0, 74, 173, 0.3);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #004aad;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #023e8a;
+    }
+
+    p {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    a {
+      color: #004aad;
+      font-weight: bold;
+      text-decoration: none;
+      margin-left: 5px;
+      transition: color 0.3s;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      color: #023e8a;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Register for TravelGo</h2>
+    <form method="POST" action="/register">
+      <input type="text" name="name" placeholder="Enter your name" required>
+      <input type="email" name="email" placeholder="Enter your email" required>
+      <input type="password" name="password" placeholder="Enter your password" required>
+      <input type="password" name="confirm_password" placeholder="Confirm your password" required>
+      <button type="submit">Register</button>
+    </form>
+    <p>Already have an account?
+      <a href="{{ url_for('login') }}">Login</a>
+    </p>
+  </div>
+</body>
+</html>
+

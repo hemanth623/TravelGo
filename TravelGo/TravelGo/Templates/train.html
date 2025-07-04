@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Search Trains - TravelGo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-image: url('https://wallpaperbat.com/img/249751-hd-train-wallpaper.jpg');
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    header {
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      color: white;
+    }
+    .container {
+      max-width: 850px;
+      margin: 30px auto;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 25px;
+      border-radius: 12px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    select, input, button {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .train-card {
+      background: #f1f3f5;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+    #loader {
+      text-align: center;
+      margin-top: 20px;
+      display: none;
+    }
+    .spinner {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #007bff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+  </style>
+</head>
+<body>
+<header><h1>🚆 TravelGo - Train Booking</h1></header>
+<div class="container">
+  <h2>Search & Book Trains</h2>
+  <form id="searchForm">
+    <select id="source" required>
+      <option value="">From</option>
+      <option value="Hyderabad">Hyderabad</option>
+      <option value="Vijayawada">Vijayawada</option>
+      <option value="Guntur">Guntur</option>
+      <option value="Bengaluru">Bengaluru</option>
+      <option value="Chennai">Chennai</option>
+      <option value="Delhi">Delhi</option>
+      <option value="Mumbai">Mumbai</option>
+      <option value="Pune">Pune</option>
+      <option value="Kolkata">Kolkata</option>
+      <option value="Ahmedabad">Ahmedabad</option>
+    </select>
+    <select id="destination" required>
+      <option value="">To</option>
+      <option value="Hyderabad">Hyderabad</option>
+      <option value="Vijayawada">Vijayawada</option>
+      <option value="Guntur">Guntur</option>
+      <option value="Bengaluru">Bengaluru</option>
+      <option value="Chennai">Chennai</option>
+      <option value="Delhi">Delhi</option>
+      <option value="Mumbai">Mumbai</option>
+      <option value="Pune">Pune</option>
+      <option value="Kolkata">Kolkata</option>
+      <option value="Ahmedabad">Ahmedabad</option>
+    </select>
+    <select id="coachType" required>
+      <option value="">Coach Type</option>
+      <option value="Sleeper">Sleeper</option>
+      <option value="AC 3-Tier">AC 3-Tier</option>
+      <option value="AC 2-Tier">AC 2-Tier</option>
+      <option value="AC First Class">AC First Class</option>
+    </select>
+    <input type="date" id="travelDate" required>
+    <input type="number" id="persons" placeholder="No. of Persons" min="1" value="1" required>
+    <button type="submit">Search</button>
+  </form>
+
+  <div id="loader"><div class="spinner"></div><p>Finding trains...</p></div>
+  <div id="results"></div>
+</div>
+
+<script>
+const cities = ["Hyderabad", "Vijayawada", "Guntur", "Bengaluru", "Chennai", "Delhi", "Mumbai", "Pune", "Kolkata", "Ahmedabad"];
+const coachTypes = ["Sleeper", "AC 3-Tier", "AC 2-Tier", "AC First Class"];
+
+function generateTrains() {
+  const trains = [];
+  let id = 11001;
+  cities.forEach(src => {
+    cities.forEach(dest => {
+      if (src !== dest) {
+        trains.push({
+          name: ["Rajdhani", "Shatabdi", "Duronto", "Intercity", "Express"][Math.floor(Math.random() * 5)] + " Express",
+          train_number: id++,
+          source: src,
+          destination: dest,
+          departure_time: `${String(6 + Math.floor(Math.random() * 10)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+          arrival_time: `${String(17 + Math.floor(Math.random() * 6)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+          coaches: {
+            "Sleeper": 200 + Math.floor(Math.random() * 100),
+            "AC 3-Tier": 500 + Math.floor(Math.random() * 150),
+            "AC 2-Tier": 800 + Math.floor(Math.random() * 200),
+            "AC First Class": 1200 + Math.floor(Math.random() * 400)
+          }
+        });
+      }
+    });
+  });
+  return trains;
+}
+
+document.getElementById('searchForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const source = document.getElementById('source').value;
+  const destination = document.getElementById('destination').value;
+  const coachType = document.getElementById('coachType').value;
+  const date = document.getElementById('travelDate').value;
+  const persons = parseInt(document.getElementById('persons').value);
+  const resultsDiv = document.getElementById('results');
+  const loader = document.getElementById('loader');
+
+  resultsDiv.innerHTML = "";
+  loader.style.display = 'block';
+
+  setTimeout(() => {
+    const allTrains = generateTrains();
+    const filtered = allTrains.filter(t => t.source === source && t.destination === destination);
+    loader.style.display = 'none';
+
+    if (filtered.length === 0) {
+      resultsDiv.innerHTML = '<p>No trains found for this route and coach type.</p>';
+      return;
+    }
+
+    filtered.forEach(train => {
+      const price = train.coaches[coachType];
+      const total = price * persons;
+      const card = document.createElement('div');
+      card.className = 'train-card';
+      card.innerHTML = `
+        <h3>${train.name} (${train.train_number})</h3>
+        <p><strong>Route:</strong> ${train.source} → ${train.destination}</p>
+        <p><strong>Departure:</strong> ${train.departure_time} | <strong>Arrival:</strong> ${train.arrival_time}</p>
+        <p><strong>Coach Type:</strong> ${coachType}</p>
+        <p><strong>Travel Date:</strong> ${date}</p>
+        <p><strong>Fare:</strong> ₹${price} per person | ₹${total} total</p>
+        <button onclick="bookTrain('${train.name}', '${train.train_number}', '${source}', '${destination}', '${date}', '${coachType}', ${price}, ${persons}, '${train.departure_time}', '${train.arrival_time}')">Book Train</button>
+      `;
+      resultsDiv.appendChild(card);
+    });
+  }, 1000);
+});
+
+function bookTrain(name, number, source, destination, date, coach, price, persons, departure, arrival) {
+  const url = `/select_train_seats?name=${encodeURIComponent(name)}&number=${number}&source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(date)}&coach=${encodeURIComponent(coach)}&price=${price}&persons=${persons}&departure=${departure}&arrival=${arrival}`;
+  window.location.href = url;
+}
+
+</script>
+</body>
+</html>

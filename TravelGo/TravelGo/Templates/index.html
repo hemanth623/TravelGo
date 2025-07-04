@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TravelGo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+      background-size: cover;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .content {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 50px 40px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      max-width: 500px;
+      color: #fff;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #fff;
+      font-size: 36px;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+    }
+
+    p {
+      font-size: 18px;
+      margin-bottom: 30px;
+      color: #f0f0f0;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .button-container a {
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #ff4081, #ff80ab);
+      color: white;
+      text-decoration: none;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 15px;
+      box-shadow: 0 4px 15px rgba(255, 64, 129, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .button-container a:hover {
+      background: linear-gradient(135deg, #8e24aa, #5e35b1);
+      transform: scale(1.05);
+    }
+
+    footer {
+      position: absolute;
+      bottom: 15px;
+      width: 100%;
+      text-align: center;
+      color: #f1f1f1;
+      font-size: 14px;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="content">
+    <h1>Welcome to TravelGo!</h1>
+    <p>Your one-stop solution for seamless travel bookings.</p>
+    <div class="button-container">
+      <a href="/register">Register</a>
+      <a href="/login">Login</a>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 TravelGo. All rights reserved.
+  </footer>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Confirm Train Booking - TravelGo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .overlay {
+      background-color: rgba(0, 0, 0, 0.65);
+      min-height: 100vh;
+      padding: 0;
+      margin: 0;
+    }
+
+    header {
+      background-color: rgba(0, 123, 255, 0.95);
+      color: white;
+      padding: 15px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 15px;
+      transition: opacity 0.3s;
+    }
+
+    nav a:hover {
+      opacity: 0.8;
+    }
+
+    .container {
+      background: #ffffffee;
+      padding: 30px;
+      max-width: 800px;
+      margin: 50px auto;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.6s ease;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 25px;
+    }
+
+    .summary {
+      line-height: 1.8;
+      font-size: 17px;
+      color: #333;
+    }
+
+    .summary strong {
+      color: #000;
+    }
+
+    .btn-container {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    button {
+      background-color: #007bff;
+      border: none;
+      color: white;
+      padding: 12px 30px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    .message-box {
+      display: none;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    .message-box.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .message-box.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background-color: rgba(255, 255, 255, 0.85);
+      color: #333;
+      font-size: 14px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 30px 15px;
+        padding: 20px;
+      }
+
+      header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      nav a {
+        margin: 10px 10px 0 0;
+        display: inline-block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <header>
+      <h1>TravelGo</h1>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/dashboard">Dashboard</a>
+      </nav>
+    </header>
+
+    <div class="container">
+      <h2>✅ Confirm Train Booking</h2>
+
+      <div id="messageBox" class="message-box" role="alert"></div>
+
+      <div class="summary">
+        <p><strong>Train:</strong> {{ booking.name }} ({{ booking.train_number }})</p>
+        <p><strong>From:</strong> {{ booking.source }} → <strong>To:</strong> {{ booking.destination }}</p>
+        <p><strong>Date:</strong> {{ booking.date }}</p>
+        <p><strong>Departure:</strong> {{ booking.departure_time }} | <strong>Arrival:</strong> {{ booking.arrival_time }}</p>
+        <p><strong>Coach:</strong> {{ booking.coach }}</p>
+        <p><strong>Passengers:</strong> {{ booking.persons }}</p>
+        <p><strong>Selected Seats:</strong> {{ booking.seats | join(', ') }}</p>
+        <p><strong>Total Price:</strong> ₹{{ booking.total_price }}</p>
+      </div>
+
+      <div class="btn-container">
+        <button id="confirmBtn">Confirm Booking</button>
+      </div>
+    </div>
+
+    <footer>
+      &copy; 2025 TravelGo. All rights reserved.
+    </footer>
+  </div>
+
+  <script>
+    const booking = {
+      name: "{{ booking.name }}",
+      train_number: "{{ booking.train_number }}",
+      source: "{{ booking.source }}",
+      destination: "{{ booking.destination }}",
+      date: "{{ booking.date }}",
+      coach: "{{ booking.coach }}",
+      departure_time: "{{ booking.departure_time }}",
+      arrival_time: "{{ booking.arrival_time }}",
+      price: parseFloat("{{ booking.price }}"),
+      persons: parseInt("{{ booking.persons }}", 10),
+      seats: "{{ booking.seats | join(',') }}".split(','),
+      total_price: parseFloat("{{ booking.total_price }}")
+    };
+
+    function showMessage(msg, type = 'error', redirect = null) {
+      const box = document.getElementById('messageBox');
+      box.textContent = msg;
+      box.className = `message-box ${type}`;
+      box.style.display = 'block';
+
+      if (redirect) {
+        setTimeout(() => {
+          window.location.href = redirect;
+        }, 2500);
+      } else {
+        setTimeout(() => {
+          box.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    document.getElementById('confirmBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/final_confirm_train_booking', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(booking)
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          showMessage(result.message || 'Booking successful!', 'success', result.redirect);
+        } else {
+          showMessage(result.message || 'Booking failed.', 'error');
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        showMessage('An error occurred while confirming your booking.', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

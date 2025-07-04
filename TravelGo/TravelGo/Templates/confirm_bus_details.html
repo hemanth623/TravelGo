@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Confirm Bus Booking - TravelGo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7fa;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 15px;
+    }
+    header h1 {
+      display: inline;
+    }
+    nav {
+      float: right;
+    }
+    nav a {
+      color: white;
+      margin-left: 20px;
+      text-decoration: none;
+    }
+    .container {
+      padding: 20px;
+    }
+    .message-box {
+      display: none;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+    }
+    .message-box.error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .message-box.success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .booking-summary {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .buttons-container {
+      margin-top: 20px;
+    }
+    button, .btn {
+      padding: 10px 20px;
+      margin-right: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    button:hover, .btn:hover {
+      background-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+    }
+    .btn-secondary:hover {
+      background-color: #565e64;
+    }
+    footer {
+      text-align: center;
+      padding: 15px;
+      background-color: #ddd;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>TravelGo</h1>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/logout">Logout</a>
+  </nav>
+</header>
+
+<div class="container">
+  <h2>✅ Confirm Bus Booking</h2>
+
+  <div id="messageBox" class="message-box" role="alert"></div>
+
+  <div class="booking-summary">
+    <h3>Booking Details:</h3>
+    <p><strong>Bus Name:</strong> {{ booking.name }}</p>
+    <p><strong>Route:</strong> {{ booking.source }} to {{ booking.destination }}</p>
+    <p><strong>Date:</strong> {{ booking.travel_date }}</p>
+    <p><strong>Time:</strong> {{ booking.time }}</p>
+    <p><strong>Type:</strong> {{ booking.type }}</p>
+    <p><strong>Passengers:</strong> {{ booking.num_persons }}</p>
+    {% if booking.selected_seats %}
+      <p><strong>Selected Seats:</strong> {{ booking.selected_seats | join(', ') }}</p>
+    {% endif %}
+    <p class="total-price"><strong>Total Price:</strong> ₹{{ "{:,.2f}".format(booking.total_price) }}</p>
+  </div>
+
+  <div class="buttons-container">
+    <button id="confirmBookingBtn">Confirm Booking</button>
+    <a href="/bus" class="btn btn-secondary">Go Back to Search</a>
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 TravelGo. All rights reserved.
+</footer>
+
+<script>
+  const name = "{{ booking.name }}";
+  const source = "{{ booking.source }}";
+  const destination = "{{ booking.destination }}";
+  const date = "{{ booking.travel_date }}";
+  const time = "{{ booking.time }}";
+  const type = "{{ booking.type }}";
+  const persons = Number("{{ booking.num_persons }}");
+  const price = Number("{{ booking.price_per_person }}");
+  const seats = "{{ booking.selected_seats | join(',') if booking.selected_seats else '' }}".split(',').filter(Boolean);
+  const total = Number("{{ booking.total_price }}");
+
+  function showMessage(message, type = 'error', redirectUrl = null) {
+    const box = document.getElementById('messageBox');
+    box.textContent = message;
+    box.className = `message-box ${type}`;
+    box.style.display = 'block';
+
+    if (redirectUrl) {
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 2000);
+    } else {
+      setTimeout(() => {
+        box.style.display = 'none';
+      }, 3000);
+    }
+  }
+
+  document.getElementById('confirmBookingBtn').addEventListener('click', async function () {
+    if (seats.length !== persons) {
+      showMessage(`Please select exactly ${persons} seat(s).`, 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch('/final_confirm_booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name, source, destination, date, time, type, persons, price, seats, total
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        showMessage(result.message || 'Booking confirmed!', 'success', result.redirect);
+      } else {
+        showMessage(result.message || 'Booking failed.', 'error');
+      }
+    } catch (error) {
+      console.error('Booking Error:', error);
+      showMessage('An error occurred while confirming your booking.', 'error');
+    }
+  });
+</script>
+
+</body>
+</html>

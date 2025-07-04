@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Confirm Train Booking - TravelGo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f7f9fb;
+    }
+
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 20px;
+    }
+
+    .details p {
+      font-size: 16px;
+      margin: 10px 0;
+    }
+
+    .details strong {
+      color: #333;
+    }
+
+    .actions {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      color: white;
+      background-color: #007bff;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .message {
+      display: none;
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🚄 TravelGo Train Confirmation</h1>
+</header>
+
+<div class="container">
+  <h2>Confirm Your Booking</h2>
+  <div class="details" id="bookingDetails"></div>
+
+  <div class="actions">
+    <button onclick="confirmBooking()">Confirm Booking</button>
+  </div>
+
+  <div id="message" class="message"></div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+
+  const booking = {
+    name: params.get('name'),
+    train_number: params.get('trainNumber'),
+    source: params.get('source'),
+    destination: params.get('destination'),
+    date: params.get('date'),
+    coach: params.get('coach'),
+    price: parseFloat(params.get('price')),
+    persons: parseInt(params.get('persons')),
+    total: parseFloat(params.get('price')) * parseInt(params.get('persons')),
+    departure: params.get('departureTime'),
+    arrival: params.get('arrivalTime'),
+    seats: params.get('seats') ? params.get('seats').split(',') : []
+  };
+
+  document.getElementById('bookingDetails').innerHTML = `
+    <p><strong>Train:</strong> ${booking.name} (${booking.train_number})</p>
+    <p><strong>Route:</strong> ${booking.source} → ${booking.destination}</p>
+    <p><strong>Date of Travel:</strong> ${booking.date}</p>
+    <p><strong>Departure Time:</strong> ${booking.departure}</p>
+    <p><strong>Arrival Time:</strong> ${booking.arrival}</p>
+    <p><strong>Coach Type:</strong> ${booking.coach}</p>
+    <p><strong>Passengers:</strong> ${booking.persons}</p>
+    <p><strong>Selected Seats:</strong> ${booking.seats.join(', ')}</p>
+    <p><strong>Fare per Person:</strong> ₹${booking.price}</p>
+    <p><strong>Total Fare:</strong> ₹${booking.total.toFixed(2)}</p>
+  `;
+
+  function confirmBooking() {
+    const messageDiv = document.getElementById('message');
+
+    fetch('/final_confirm_train_booking', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(booking)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        messageDiv.textContent = "✅ Booking Confirmed! Redirecting to Dashboard...";
+        messageDiv.className = 'message success';
+        messageDiv.style.display = 'block';
+        setTimeout(() => {
+          window.location.href = data.redirect || '/dashboard';
+        }, 2000);
+      } else {
+        throw new Error(data.message || 'Booking failed');
+      }
+    })
+    .catch(err => {
+      messageDiv.textContent = "❌ Booking failed: " + err.message;
+      messageDiv.className = 'message error';
+      messageDiv.style.display = 'block';
+    });
+  }
+</script>
+
+</body>
+</html>

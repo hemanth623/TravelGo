@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TravelGo - Bus Booking</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f8fa;
+    }
+    header {
+      background: linear-gradient(to right, #5e60ce, #7400b8);
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { margin: 0; font-size: 24px; }
+    header nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: 500;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #5e60ce;
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    select, input[type="date"], input[type="number"] {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .search-btn {
+      background: #00b894;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .bus-card {
+      background: #f0f4ff;
+      padding: 15px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .book-btn {
+      background: #5e60ce;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    /* Seat Modal */
+    #seat-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .seat-popup {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 750px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .layout-toggle {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .seat-grid {
+      display: grid;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .seat {
+      background: #eee;
+      padding: 10px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .seat.selected { background: #5e60ce; color: white; }
+    .seat-row { display: flex; justify-content: center; gap: 10px; margin-bottom: 8px; }
+    .berth-label { font-weight: bold; margin: 10px 0 5px; text-align: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TravelGo</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/dashboard">Dashboard</a>
+    </nav>
+  </header>
+
+  <div class="container">
+   <h2>🚌 TravelGo - Bus Booking</h2>
+  <div class="form-row">
+      <select id="source">
+        <option value="">From</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Vijayawada">Vijayawada</option>
+        <option value="Guntur">Guntur</option>
+        <option value="Bengaluru">Bengaluru</option>
+        <option value="Chennai">Chennai</option>
+      </select>
+      <select id="destination">
+        <option value="">To</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Vijayawada">Vijayawada</option>
+        <option value="Guntur">Guntur</option>
+        <option value="Bengaluru">Bengaluru</option>
+        <option value="Chennai">Chennai</option>
+      </select>
+      <input type="date" id="date" />
+      <input type="number" id="numPersons" min="1" value="1" placeholder="Passengers" />
+      <button class="search-btn" onclick="searchBuses()">Search</button>
+    </div>
+    <div id="bus-list"></div>
+  </div>
+
+  <!-- Seat Modal -->
+  <div id="seat-modal">
+    <div class="seat-popup">
+      <h3>Select Your Seats</h3>
+      <div id="layoutToggle" class="layout-toggle" style="display:none;">
+        <button onclick="showLayout('lower')">Lower Berth</button>
+        <button onclick="showLayout('upper')">Upper Berth</button>
+      </div>
+      <div id="seat-grid"></div>
+      <div style="text-align:right">
+        <button onclick="confirmSeatSelection()" style="background:#28a745; color:white; padding:10px 20px; border:none; border-radius:6px;">Confirm</button>
+        <button onclick="closeModal()" style="margin-left:10px; padding:10px 20px; border:none; border-radius:6px; background:#ccc;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const cities = ["Hyderabad", "Vijayawada", "Guntur", "Bengaluru", "Chennai"];
+  const types = ["AC Sleeper", "Non-AC Seater", "AC Seater", "Non-AC Sleeper"];
+  const buses = [];
+  let selectedSeats = [];
+  let currentBus = null;
+  let selectedDate = "";
+
+  cities.forEach(from => {
+    cities.forEach(to => {
+      if (from !== to) {
+        buses.push({
+          name: `${["Orange", "Kaveri", "VRL", "TSRTC"][Math.floor(Math.random()*4)]} Travels`,
+          source: from,
+          destination: to,
+          time: `${6+Math.floor(Math.random()*12)}:${Math.floor(Math.random()*60).toString().padStart(2,'0')} ${Math.random()>0.5?'AM':'PM'}`,
+          type: types[Math.floor(Math.random()*types.length)],
+          price: 500 + Math.floor(Math.random()*500),
+          id: `B${Math.floor(Math.random()*10000)}`
+        });
+      }
+    });
+  });
+
+  function searchBuses() {
+    const s = document.getElementById("source").value;
+    const d = document.getElementById("destination").value;
+    const date = document.getElementById("date").value;
+    const p = parseInt(document.getElementById("numPersons").value);
+    selectedDate = date;
+    const list = document.getElementById("bus-list");
+    list.innerHTML = "";
+    if (!s || !d || !date || !p) {
+      list.innerHTML = "<p>Please fill all fields.</p>";
+      return;
+    }
+    const found = buses.filter(b => b.source === s && b.destination === d);
+    if (found.length === 0) {
+      list.innerHTML = "<p>No buses found.</p>";
+      return;
+    }
+    found.forEach(bus => {
+      const div = document.createElement("div");
+      div.className = "bus-card";
+      div.innerHTML = `<div><strong>${bus.name}</strong><br>${bus.source} → ${bus.destination}<br>${bus.time} | ${bus.type}</div><div><b>₹${bus.price}</b><br><button class='book-btn' onclick='openSeatModal(${JSON.stringify(bus)}, ${p})'>Choose Seats</button></div>`;
+      list.appendChild(div);
+    });
+  }
+
+  function openSeatModal(bus, num) {
+    currentBus = { ...bus, persons: num, date: selectedDate };
+    selectedSeats = [];
+    document.getElementById("seat-grid").innerHTML = "";
+    const grid = document.getElementById("seat-grid");
+    const layoutToggle = document.getElementById("layoutToggle");
+    if (bus.type.toLowerCase().includes("sleeper")) {
+      layoutToggle.style.display = "block";
+      showLayout("lower");
+    } else {
+      layoutToggle.style.display = "none";
+      grid.innerHTML = "";
+      for (let i = 1; i <= 30; i++) {
+        const seat = document.createElement("div");
+        seat.className = "seat";
+        seat.innerText = `S${i}`;
+        seat.onclick = () => toggleSeat(`S${i}`, seat);
+        grid.appendChild(seat);
+      }
+    }
+    document.getElementById("seat-modal").style.display = "flex";
+  }
+
+  function showLayout(type) {
+    const grid = document.getElementById("seat-grid");
+    grid.innerHTML = "";
+    for (let row = 1; row <= 6; row++) {
+      const r = document.createElement("div");
+      r.className = "seat-row";
+      const s1 = document.createElement("div");
+      s1.className = "seat";
+      s1.innerText = `${type[0].toUpperCase()}${row}A`;
+      s1.onclick = () => toggleSeat(s1.innerText, s1);
+      const s2 = document.createElement("div");
+      s2.className = "seat";
+      s2.innerText = `${type[0].toUpperCase()}${row}B`;
+      s2.onclick = () => toggleSeat(s2.innerText, s2);
+      r.appendChild(s1);
+      r.appendChild(s2);
+      grid.appendChild(r);
+    }
+  }
+
+  function toggleSeat(id, el) {
+    if (selectedSeats.includes(id)) {
+      selectedSeats = selectedSeats.filter(s => s !== id);
+      el.classList.remove("selected");
+    } else {
+      if (selectedSeats.length >= currentBus.persons) {
+        alert(`You can select only ${currentBus.persons} seat(s).`);
+        return;
+      }
+      selectedSeats.push(id);
+      el.classList.add("selected");
+    }
+  }
+
+  function confirmSeatSelection() {
+    if (selectedSeats.length !== currentBus.persons) {
+      alert(`Please select exactly ${currentBus.persons} seat(s).`);
+      return;
+    }
+    const seats = selectedSeats.join(",");
+    const url = `/confirm_bus_details?name=${encodeURIComponent(currentBus.name)}&source=${encodeURIComponent(currentBus.source)}&destination=${encodeURIComponent(currentBus.destination)}&time=${encodeURIComponent(currentBus.time)}&type=${encodeURIComponent(currentBus.type)}&price=${currentBus.price}&date=${currentBus.date}&persons=${currentBus.persons}&seats=${seats}`;
+    window.location.href = url;
+  }
+
+  function closeModal() {
+    document.getElementById("seat-modal").style.display = "none";
+  }
+</script>
+</body>
+</html>
